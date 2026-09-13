@@ -1,8 +1,7 @@
 import random
 from datetime import datetime
 from typing import List, Optional
-# pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery, Response
+from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery, Response, UploadFile, File
 import requests
 from sqlalchemy.orm import Session
 from backend.config import settings
@@ -58,38 +57,71 @@ def execute_chat(payload: ChatRequest):
 
 @router.post("/tts")
 def generate_tts(payload: TTSRequest):
-    """Generates Text-to-Speech audio using Gemini TTS."""
-    if not settings.GEMINI_API_KEY:
-        raise HTTPException(status_code=500, detail="Gemini API Key is missing.")
+    """Generates Text-to-Speech audio using Sarvam API (Vach)."""
+    if not settings.VOICE_API_KEY:
+        raise HTTPException(status_code=500, detail="Voice API Key is missing.")
     if not payload.text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:predict?key={settings.GEMINI_API_KEY}"
+    url = "https://api.sarvam.ai/text-to-speech"
     
-    # Example payload format based on Generative Language API
     request_data = {
-        "instances": [
-            {
-                "text": payload.text
-            }
-        ]
+        "inputs": [payload.text],
+        "target_language_code": payload.language if payload.language else "hi-IN",
+        "speaker": "meera",
+        "pitch": 0,
+        "pace": 1.0,
+        "loudness": 1.5,
+        "speech_sample_rate": 8000,
+        "enable_preprocessing": True,
+        "model": "bulbul:v1"
+    }
+    
+    headers = {
+        "api-subscription-key": settings.VOICE_API_KEY,
+        "Content-Type": "application/json"
     }
     
     try:
-        res = requests.post(url, json=request_data, timeout=15)
+        res = requests.post(url, json=request_data, headers=headers, timeout=15)
         if res.status_code == 200:
             data = res.json()
-            # The API usually returns base64 audio in predictions
-            audio_base64 = data.get("predictions", [{}])[0].get("audioB64")
-            if not audio_base64:
+            audio_base64 = data.get("audios", [])
+            if not audio_base64 or len(audio_base64) == 0:
                 raise HTTPException(status_code=500, detail="No audio content returned by TTS service.")
             
             import base64
-            audio_bytes = base64.b64decode(audio_base64)
-            return Response(content=audio_bytes, media_type="audio/mp3")
+            audio_bytes = base64.b64decode(audio_base64[0])
+            return Response(content=audio_bytes, media_type="audio/wav")
         else:
             print("TTS error:", res.text)
-            raise HTTPException(status_code=res.status_code, detail="Failed to generate speech via Gemini.")
+            raise HTTPException(status_code=res.status_code, detail="Failed to generate speech via Voice API.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/stt")
+def generate_stt(file: UploadFile = File(...)):
+    """Transcribes audio to text using Sarvam API."""
+    if not settings.VOICE_API_KEY:
+        raise HTTPException(status_code=500, detail="Voice API Key is missing.")
+    
+    url = "https://api.sarvam.ai/speech-to-text-translate"
+    
+    headers = {
+        "api-subscription-key": settings.VOICE_API_KEY
+    }
+    
+    try:
+        files = {
+            "file": (file.filename, file.file, file.content_type)
+        }
+        res = requests.post(url, headers=headers, files=files, timeout=30)
+        if res.status_code == 200:
+            data = res.json()
+            return {"transcript": data.get("transcript", "")}
+        else:
+            print("STT error:", res.text)
+            raise HTTPException(status_code=res.status_code, detail="Failed to transcribe speech via Voice API.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

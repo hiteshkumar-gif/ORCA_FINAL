@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, MessageSquare, Sparkles, User, Globe, RefreshCw, ChevronDown, Anchor, Waves, MapPin } from 'lucide-react';
+import { Bot, Send, X, MessageSquare, Sparkles, User, Globe, RefreshCw, ChevronDown, Anchor, Waves, MapPin, Mic, Square } from 'lucide-react';
 import { getApiBase } from '@/lib/config';
 import { useLocationLanguage } from '@/context/LocationLanguageContext';
 import VoiceControl from './VoiceControl';
@@ -22,6 +22,9 @@ export default function OrcaChatbot() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -33,6 +36,70 @@ export default function OrcaChatbot() {
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        audioChunksRef.current = [];
+        
+        // Send to STT backend
+        setLoading(true);
+        try {
+          const formData = new FormData();
+          // Provide a filename with extension
+          formData.append('file', audioBlob, 'audio.webm');
+          const apiBase = getApiBase();
+          const res = await fetch(`${apiBase}/api/stt`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.transcript) {
+              setInput(data.transcript);
+            } else {
+              setMessages(prev => [...prev, { sender: 'orca', text: '⚠️ Could not transcribe your voice.' }]);
+            }
+          } else {
+            setMessages(prev => [...prev, { sender: 'orca', text: '⚠️ STT service error.' }]);
+          }
+        } catch (err) {
+          setMessages(prev => [...prev, { sender: 'orca', text: '⚠️ Network error during voice transcription.' }]);
+        } finally {
+          setLoading(false);
+        }
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Microphone access denied or error:', err);
+      setMessages(prev => [...prev, { sender: 'orca', text: '⚠️ Microphone access denied or unavailable.' }]);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const handleSend = async (customText?: string) => {
     const textToSend = customText || input;
@@ -227,6 +294,20 @@ export default function OrcaChatbot() {
               placeholder={`Ask ORCA in ${language.name === 'Auto Detect' ? 'any language' : language.name}...`}
               className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-500 text-slate-100 placeholder-slate-500 text-xs focus:outline-none transition-all font-sans"
             />
+            
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`p-2.5 rounded-xl transition-all font-bold ${
+                isRecording 
+                  ? 'bg-red-500 hover:bg-red-400 text-white animate-pulse' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700'
+              }`}
+              title={isRecording ? "Stop recording" : "Voice input"}
+            >
+              {isRecording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-4 h-4" />}
+            </button>
+
             <button
               type="submit"
               disabled={loading || !input.trim()}

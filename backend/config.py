@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     OPEN_METEO_BASE_URL: str = "https://marine-api.open-meteo.com/v1"
     OPEN_METEO_WEATHER_URL: str = "https://api.open-meteo.com/v1/forecast"
     GEMINI_API_KEY: str = ""
+    VOICE_API_KEY: str = ""
 
     DATABASE_URL: str = "sqlite:///./orca.db"
 
