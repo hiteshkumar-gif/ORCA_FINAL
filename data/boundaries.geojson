@@ -1,0 +1,68 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "boundary_id": "EEZ_INDIAN_OCEAN",
+        "name": "Indian Exclusive Economic Zone (EEZ)",
+        "type": "EEZ",
+        "description": "Outer limit of Indian Exclusive Economic Zone maritime jurisdiction."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [79.80, 12.80],
+            [80.70, 12.80],
+            [80.70, 13.40],
+            [79.80, 13.40],
+            [79.80, 12.80]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "boundary_id": "RESTRICTED_PORT_CHANNEL",
+        "name": "Restricted Maritime Zone (Port Anchorage)",
+        "type": "RESTRICTED",
+        "description": "Commercial vessel shipping channel & naval anchorage. Fishing prohibited."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.29, 13.09],
+            [80.34, 13.09],
+            [80.34, 13.13],
+            [80.29, 13.13],
+            [80.29, 13.09]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "boundary_id": "MARINE_PROTECTED_AREA",
+        "name": "Marine Protected Area (Coral & Reef Sanctuary)",
+        "type": "PROTECTED",
+        "description": "Ecologically sensitive marine protected zone. Trawling & commercial netting restricted."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.28, 12.98],
+            [80.34, 12.98],
+            [80.34, 13.04],
+            [80.28, 13.04],
+            [80.28, 12.98]
+          ]
+        ]
+      }
+    }
+  ]
+}

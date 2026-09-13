@@ -1,0 +1,45 @@
+steps:
+  # Build Backend Docker Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/orca-backend:$COMMIT_SHA', '-f', 'docker/Dockerfile.backend', '.']
+
+  # Push Backend to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/orca-backend:$COMMIT_SHA']
+
+  # Deploy Backend to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloudsdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'orca-backend'
+      - '--image=gcr.io/$PROJECT_ID/orca-backend:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=ENVIRONMENT=production,DEMO_MODE=true'
+
+  # Build Frontend Docker Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/orca-frontend:$COMMIT_SHA', '-f', 'frontend/Dockerfile', './frontend']
+
+  # Push Frontend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/orca-frontend:$COMMIT_SHA']
+
+  # Deploy Frontend to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloudsdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'orca-frontend'
+      - '--image=gcr.io/$PROJECT_ID/orca-frontend:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/orca-backend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/orca-frontend:$COMMIT_SHA'

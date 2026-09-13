@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_id": "ZONE_A",
+        "name": "Zone A — Moderate PFZ",
+        "pfz_score": 72,
+        "label": "Moderate",
+        "fish_density": "Moderate Pelagic Aggregation",
+        "chlorophyll_mg_m3": 1.4,
+        "description": "Inshore fishing sector with moderate pelagic fish aggregation."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.32, 13.15],
+            [80.38, 13.15],
+            [80.38, 13.20],
+            [80.32, 13.20],
+            [80.32, 13.15]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_id": "ZONE_B",
+        "name": "Zone B — High PFZ (Recommended)",
+        "pfz_score": 86,
+        "label": "High",
+        "fish_density": "High Pelagic Aggregation",
+        "chlorophyll_mg_m3": 2.8,
+        "description": "High Chlorophyll-a thermal front zone off coastal shelf with strong pelagic fish density."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.38, 13.10],
+            [80.46, 13.10],
+            [80.46, 13.17],
+            [80.38, 13.17],
+            [80.38, 13.10]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "zone_id": "ZONE_C",
+        "name": "Zone C — Very High PFZ",
+        "pfz_score": 91,
+        "label": "Very High",
+        "fish_density": "Optimal Tuna & Mackerel Shoal Density",
+        "chlorophyll_mg_m3": 3.4,
+        "description": "Deep offshore upwelling zone with very high fish aggregation, but further travel distance."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.45, 13.02],
+            [80.54, 13.02],
+            [80.54, 13.09],
+            [80.45, 13.09],
+            [80.45, 13.02]
+          ]
+        ]
+      }
+    }
+  ]
+}
