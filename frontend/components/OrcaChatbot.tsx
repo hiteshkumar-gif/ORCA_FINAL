@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, X, MessageSquare, Sparkles, User, Globe, RefreshCw, ChevronDown, Anchor, Waves, MapPin } from 'lucide-react';
 import { getApiBase } from '@/lib/config';
 import { useLocationLanguage } from '@/context/LocationLanguageContext';
+import VoiceControl from './VoiceControl';
 
 interface ChatMessage {
   sender: 'user' | 'orca';
@@ -166,14 +167,19 @@ export default function OrcaChatbot() {
                   </div>
                 )}
 
-                <div
-                  className={`max-w-[82%] p-3 rounded-2xl leading-relaxed whitespace-pre-wrap ${
-                    msg.sender === 'user'
-                      ? 'bg-cyan-500 text-slate-950 font-medium rounded-tr-none shadow-md'
-                      : 'bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-tl-none shadow-lg'
-                  }`}
-                >
-                  {msg.text}
+                <div className="flex flex-col gap-1 max-w-[82%]">
+                  <div
+                    className={`p-3 rounded-2xl leading-relaxed whitespace-pre-wrap ${
+                      msg.sender === 'user'
+                        ? 'bg-cyan-500 text-slate-950 font-medium rounded-tr-none shadow-md'
+                        : 'bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-tl-none shadow-lg'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  {msg.sender === 'orca' && (
+                    <VoiceControl text={msg.text} language={language.code} />
+                  )}
                 </div>
 
                 {msg.sender === 'user' && (

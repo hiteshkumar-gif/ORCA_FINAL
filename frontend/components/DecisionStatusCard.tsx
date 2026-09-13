@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, AlertTriangle, XCircle, Activity, Award, CheckCircle2, Zap, ArrowUpRight } from 'lucide-react';
+import VoiceControl from './VoiceControl';
 
 interface DecisionStatusCardProps {
   recommendation: 'GO' | 'CAUTION' | 'WAIT' | string;
@@ -150,6 +151,7 @@ export default function DecisionStatusCard({
         <p className="text-xs text-slate-200 leading-relaxed font-sans">
           {explanation}
         </p>
+        <VoiceControl text={explanation} />
       </div>
 
       {/* DETERMINISTIC FORMULA CAPTION */}

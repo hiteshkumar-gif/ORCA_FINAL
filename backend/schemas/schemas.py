@@ -164,3 +164,7 @@ class ChatResponse(BaseModel):
     language_detected: Optional[str] = "auto"
     status: str = "success"
 
+class TTSRequest(BaseModel):
+    text: str
+    language: Optional[str] = None
+

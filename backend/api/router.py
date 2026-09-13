@@ -2,15 +2,17 @@ import random
 from datetime import datetime
 from typing import List, Optional
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery
+from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery, Response
+import requests
 from sqlalchemy.orm import Session
+from backend.config import settings
 
 from backend.database.database import get_db, Base, engine
 from backend.models.models import Decision, DecisionSnapshot, AgentRun, Alert, MonitoringEvent, Feedback
 from backend.schemas.schemas import (
     UserQueryRequest, QueryResponse, DecisionResult,
     SimulateConditionChangeRequest, FeedbackRequest, GeoFeature,
-    ChatRequest, ChatResponse
+    ChatRequest, ChatResponse, TTSRequest
 )
 from backend.agents.orchestrator import orchestrator
 from backend.services.monitoring_service import monitoring_service
@@ -53,6 +55,43 @@ def execute_chat(payload: ChatRequest):
         status=result.get("status", "success")
     )
 
+
+@router.post("/tts")
+def generate_tts(payload: TTSRequest):
+    """Generates Text-to-Speech audio using Gemini TTS."""
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Gemini API Key is missing.")
+    if not payload.text:
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:predict?key={settings.GEMINI_API_KEY}"
+    
+    # Example payload format based on Generative Language API
+    request_data = {
+        "instances": [
+            {
+                "text": payload.text
+            }
+        ]
+    }
+    
+    try:
+        res = requests.post(url, json=request_data, timeout=15)
+        if res.status_code == 200:
+            data = res.json()
+            # The API usually returns base64 audio in predictions
+            audio_base64 = data.get("predictions", [{}])[0].get("audioB64")
+            if not audio_base64:
+                raise HTTPException(status_code=500, detail="No audio content returned by TTS service.")
+            
+            import base64
+            audio_bytes = base64.b64decode(audio_base64)
+            return Response(content=audio_bytes, media_type="audio/mp3")
+        else:
+            print("TTS error:", res.text)
+            raise HTTPException(status_code=res.status_code, detail="Failed to generate speech via Gemini.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/query", response_model=QueryResponse)
 def execute_query(payload: UserQueryRequest, db: Session = Depends(get_db)):
