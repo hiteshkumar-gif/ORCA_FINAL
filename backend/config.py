@@ -1,15 +1,17 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    APP_NAME: str = "ORCA"
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
-    PORT: int = 8000
-    SECRET_KEY: str = "orca-secret-key-change-in-production-32-chars"
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    DEMO_MODE: bool = True
+    APP_NAME: str = "ORCA"
+    ENVIRONMENT: str = "production"
+    DEBUG: bool = False
+    PORT: int = 8000
+    SECRET_KEY: str = "orca-prod-secret-key-32-characters-minimum"
+    ALLOWED_ORIGINS: str = "*"
+
+    DEMO_MODE: bool = False
     OPEN_METEO_BASE_URL: str = "https://marine-api.open-meteo.com/v1"
     OPEN_METEO_WEATHER_URL: str = "https://api.open-meteo.com/v1/forecast"
     GEMINI_API_KEY: str = ""
@@ -32,9 +34,5 @@ class Settings(BaseSettings):
     # Wind Thresholds (in km/h)
     WIND_SAFE_MAX: float = 25.0
     WIND_CAUTION_MAX: float = 40.0
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
 settings = Settings()
